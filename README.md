@@ -5,7 +5,8 @@ Web Implementation of D&D 5th Edition.
 
 ## Development
 
-**Makefile**
+
+### Makefile
 
 All common development tasks are written down as Make targets in _Makefile_.
 
@@ -15,7 +16,8 @@ configuration or setup _should_ be required. If a Make target doesn't work out
 of the box after cloning the project, then it's a bug! Please
 [let me know](mailto:danielbrice@gmail.com).
 
-**Dependencies**
+
+### Dependencies
 
 To add a Purescript dependency, for example _effect_, use
 `npx spago install effect`.
