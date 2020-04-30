@@ -18,7 +18,7 @@ node_modules/.bin/purs:
 	npm install
 
 .PHONY: setup
-setup: node_modules/.bin/spago node_modules/.bin/purs ## Install development tools (locally).
+setup: node_modules/.bin/spago node_modules/.bin/purs ## Install development tools into project-local cache.
 
 .PHONY: build
 build: setup ## Build project
