@@ -1,0 +1,6 @@
+.spago/
+node_modules/
+output/
+package-lock.json
+.psci_modules/
+generated-docs/

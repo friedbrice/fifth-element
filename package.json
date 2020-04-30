@@ -1,0 +1,9 @@
+{
+  "name": "fifth-element",
+  "version": "1.0.0",
+  "description": "Web Implementation of D&D 5th Edition.",
+  "devDependencies": {
+    "purescript": "^0.13.6",
+    "spago": "^0.15.2"
+  }
+}
