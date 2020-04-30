@@ -28,7 +28,7 @@ To add a Javascript dependency, for example _left-pad_, use
 
 ## License and Copyright
 
-Copyright 2020 Daniel Brice and the contributors
+Copyright 2020 Daniel Brice and the contributors.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

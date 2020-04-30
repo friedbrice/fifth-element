@@ -1,9 +1,9 @@
 .PHONY: list
-list: ## Show available targets
+list: ## Show available targets.
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##\s*\(.*\)/\n\t\1\n/'
 
 .PHONY: clean
-clean: ## Delete project-local Npm and Spago caches
+clean: ## Delete project-local Npm and Spago caches.
 	rm -rf .psci_modules
 	rm -rf .spago
 	rm -rf generated-docs
@@ -21,29 +21,29 @@ node_modules/.bin/purs:
 setup: node_modules/.bin/spago node_modules/.bin/purs ## Install development tools into project-local cache.
 
 .PHONY: build
-build: setup ## Build project
+build: setup ## Build project.
 	npx spago build
 
 .PHONY: repl
-repl: setup ## Load project interactively in the Purescript REPL
+repl: setup ## Load project interactively in the Purescript REPL.
 	npx spago repl
 
 .PHONY: watch
-watch: setup ## Recompile on file changes
+watch: setup ## Recompile on file changes.
 	npx pscid
 
 .PHONY: test
-test: setup ## Run tests
+test: setup ## Run tests.
 	npx spago test
 
 .PHONY: run
-run: setup ## Run app
+run: setup ## Run app.
 	npx spago run
 
 .PHONY: docs
-docs: setup ## Generate documentation
+docs: setup ## Generate documentation.
 	npx spago docs
 
 .PHONY: bundle
-bundle: clean test docs ## Package app for distribution
+bundle: clean test docs ## Package app for distribution.
 	# npx spago bundle-app
