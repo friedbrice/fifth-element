@@ -1,2 +1,2 @@
 import Imports
-import Effect.Console
+import Main
