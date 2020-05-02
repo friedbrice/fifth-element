@@ -447,7 +447,7 @@ mkString :: forall f. Foldable f => f Char -> String
 mkString = foldMap Internal.singleton
 
 rmString :: forall f. Unfoldable f => String -> f Char
-rmString = Internal.toCharArray >>> rmArray
+rmString = rmArray <<< Internal.toCharArray
 
 intercalate1 :: forall f m. Foldable1 f => Semigroup m => m -> f m -> m
 intercalate1 = Foldable1.intercalate

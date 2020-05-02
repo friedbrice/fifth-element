@@ -14,51 +14,64 @@ import Effect.Exception (error)
 import Data.Array as Array
 --
 -- import Constants (tileMapDimensions, canvasDimensions, font, black, Color(..), displayDimensions, charWidth, charHeight)
--- import Graphics.Canvas as Canvas
+import Graphics.Canvas as Canvas
 -- import Types (Sprite (..))
---
--- newtype Context = Context { context :: Canvas.Context2D, spritesheet :: Canvas.CanvasImageSource }
---
--- initCanvas :: { canvasId :: String, spritesheetPath :: String } -> Aff (Maybe Context)
--- initCanvas { canvasId, spritesheetPath } = runMaybeT do
---   canvas <- MaybeT $ liftEffect $ Canvas.getCanvasElementById canvasId
---   liftEffect $ Canvas.setCanvasDimensions canvas canvasDimensions
---   context <- liftEffect $ Canvas.getContext2D canvas
---   liftEffect $ setImageSmoothing context false
---   liftEffect $ Canvas.setFont context font
---   spritesheet <- lift $ makeAff \handler -> do
---     Canvas.tryLoadImage spritesheetPath (handler <<< maybe (Left $ error "failed to load image") pure)
---     mempty
---   pure $ Context { context, spritesheet }
---
--- foreign import setImageSmoothing :: Canvas.Context2D -> Boolean -> Effect Unit
---
--- drawSprite :: Context -> Sprite -> Vector Number -> Effect Unit
--- drawSprite (Context {context, spritesheet}) (Sprite { offsetX, offsetY }) (V { x, y }) =
---   let
---     { width, height, padding } = tileMapDimensions
---     { drawWidth, drawHeight} = displayDimensions
---     sourceX = toNumber (offsetX * (width + padding))
---     sourceY = toNumber (offsetY * (height + padding))
---     w = toNumber width
---     h = toNumber height
---     p = toNumber padding
---   in
---   Canvas.drawImageFull context spritesheet sourceX sourceY w h x y (toNumber drawWidth) (toNumber drawHeight)
---
--- drawSpriteToGrid :: Context -> Sprite -> Vector Int -> Effect Unit
--- drawSpriteToGrid ctx sprite (V { x, y }) =
---   let
---     { drawWidth, drawHeight } = displayDimensions
---     canvasX = toNumber (x * drawWidth)
---     canvasY = toNumber (y * drawHeight)
---   in
---   when
---     ( 0 <= x && x < displayDimensions.width
---       && 0 <= y && y < displayDimensions.height
---       ) $ drawSprite ctx sprite (V {x: canvasX, y: canvasY})
---     -- (Canvas.drawImageFull context spritesheet sourceX sourceY w h canvasX canvasY w h)
---
+import Data.Int (toNumber)
+
+newtype Context = Context { context :: Canvas.Context2D, spritesheet :: Canvas.CanvasImageSource }
+
+newtype Color = Color String
+black = Color "black"
+
+newtype Sprite = Sprite { offsetX :: Int, offsetY :: Int }
+
+newtype Vector a = V { x :: a, y :: a }
+
+displayDimensions = { drawWidth: 32, drawHeight: 32, width: 1280, height: 720 }
+tileMapDimensions = { width: 32, height: 32, padding: 0 }
+canvasDimensions = { height: 800.0, width: 1280.0 }
+font = "Comic Sans"
+
+initCanvas :: { canvasId :: String, spritesheetPath :: String } -> Aff (Maybe Context)
+initCanvas { canvasId, spritesheetPath } = runMaybeT do
+  canvas <- MaybeT $ liftEffect $ Canvas.getCanvasElementById canvasId
+  liftEffect $ Canvas.setCanvasDimensions canvas canvasDimensions
+  context <- liftEffect $ Canvas.getContext2D canvas
+  liftEffect $ setImageSmoothing context false
+  liftEffect $ Canvas.setFont context font
+  spritesheet <- lift $ makeAff \handler -> do
+    Canvas.tryLoadImage spritesheetPath (handler <<< maybe (Left $ error "failed to load image") pure)
+    mempty
+  pure $ Context { context, spritesheet }
+
+foreign import setImageSmoothing :: Canvas.Context2D -> Boolean -> Effect Unit
+
+drawSprite :: Context -> Sprite -> Vector Number -> Effect Unit
+drawSprite (Context {context, spritesheet}) (Sprite { offsetX, offsetY }) (V { x, y }) =
+  let
+    { width, height, padding } = tileMapDimensions
+    { drawWidth, drawHeight} = displayDimensions
+    sourceX = toNumber (offsetX * (width + padding))
+    sourceY = toNumber (offsetY * (height + padding))
+    w = toNumber width
+    h = toNumber height
+    p = toNumber padding
+  in
+  Canvas.drawImageFull context spritesheet sourceX sourceY w h x y (toNumber drawWidth) (toNumber drawHeight)
+
+drawSpriteToGrid :: Context -> Sprite -> Vector Int -> Effect Unit
+drawSpriteToGrid ctx sprite (V { x, y }) =
+  let
+    { drawWidth, drawHeight } = displayDimensions
+    canvasX = toNumber (x * drawWidth)
+    canvasY = toNumber (y * drawHeight)
+  in
+  when
+    ( 0 <= x && x < displayDimensions.width
+      && 0 <= y && y < displayDimensions.height
+      ) $ drawSprite ctx sprite (V {x: canvasX, y: canvasY})
+    -- (Canvas.drawImageFull context spritesheet sourceX sourceY w h canvasX canvasY w h)
+
 -- dotXLoc :: Number
 -- dotXLoc = toNumber 517
 --
@@ -131,18 +144,18 @@ import Data.Array as Array
 --   drawTextToGrid ctx color t (V {x, y: y + i})
 --
 --
--- clear :: Context -> Effect Unit
--- clear ctx@(Context{context}) = do
---   setFillStyle ctx black
---   Canvas.fillRect context { x: 0.0, y: 0.0, width: canvasDimensions.width, height: canvasDimensions.height }
---
--- clearRegion :: Context -> {x :: Number, y :: Number, width :: Number, height :: Number} -> Effect Unit
--- clearRegion ctx@(Context {context}) rect = do
---   setFillStyle ctx black
---   Canvas.fillRect context rect
---
--- setFillStyle :: Context -> Color -> Effect Unit
--- setFillStyle (Context {context}) (Color c) = Canvas.setFillStyle context c
---
+clear :: Context -> Effect Unit
+clear ctx@(Context{context}) = do
+  setFillStyle ctx black
+  Canvas.fillRect context { x: 0.0, y: 0.0, width: canvasDimensions.width, height: canvasDimensions.height }
+
+clearRegion :: Context -> {x :: Number, y :: Number, width :: Number, height :: Number} -> Effect Unit
+clearRegion ctx@(Context {context}) rect = do
+  setFillStyle ctx black
+  Canvas.fillRect context rect
+
+setFillStyle :: Context -> Color -> Effect Unit
+setFillStyle (Context {context}) (Color c) = Canvas.setFillStyle context c
+
 -- textOffset :: { x ∷ Number, y ∷ Number }
 -- textOffset = { x: 3.0, y: 13.0 }
