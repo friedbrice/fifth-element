@@ -1,8 +1,7 @@
 module Test.Main where
 
-import Prelude
+import Imports
 
-import Effect (Effect)
 import Effect.Class.Console (log)
 
 main :: Effect Unit

@@ -25,19 +25,19 @@ build: setup ## Build project.
 	npx spago build
 
 .PHONY: repl
-repl: setup ## Load project interactively in the Purescript REPL.
+repl: build ## Load project interactively in the Purescript REPL.
 	npx spago repl
 
 .PHONY: watch
-watch: setup ## Recompile on file changes.
+watch: build ## Recompile on file changes.
 	npx pscid
 
 .PHONY: test
-test: setup ## Run tests.
+test: build ## Run tests.
 	npx spago test
 
 .PHONY: run
-run: setup ## Run app.
+run: build ## Run app.
 	npx spago run
 
 .PHONY: docs
