@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Web Implementation of D&D 5th Edition.",
   "devDependencies": {
+    "parcel": "^1.12.4",
     "purescript": "^0.13.6",
     "spago": "^0.15.2"
+  },
+  "dependencies": {
+    "output": "0.0.0"
   }
 }

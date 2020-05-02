@@ -4,3 +4,8 @@ output/
 package-lock.json
 .psci_modules/
 generated-docs/
+.cache/
+*.swp
+dist/
+.psc-ide-port
+tags

@@ -17,8 +17,11 @@ node_modules/.bin/spago:
 node_modules/.bin/purs:
 	npm install
 
+node_modules/.bin/parcel:
+	npm install
+
 .PHONY: setup
-setup: node_modules/.bin/spago node_modules/.bin/purs ## Install development tools into project-local cache.
+setup: node_modules/.bin/spago node_modules/.bin/purs node_modules/.bin/parcel ## Install development tools into project-local cache.
 
 .PHONY: build
 build: setup ## Build project.
