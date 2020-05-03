@@ -402,6 +402,8 @@ import Data.TraversableWithIndex
 
 import Data.String.CodeUnits (singleton, toCharArray) as Internal
 
+foreign import undefined :: forall a. a
+
 
 ----
 -- Aliased Functions

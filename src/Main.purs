@@ -14,6 +14,7 @@ import FRP.Event.Mouse
 import FRP.Event
 import Effect.Random
 
+
 newtype Clickspot a = Clickspot
   { x :: Int
   , y :: Int
@@ -21,8 +22,8 @@ newtype Clickspot a = Clickspot
   , height :: Int
   , action :: a
   }
-
 derive instance newtypeClickspot :: Newtype (Clickspot a) _
+
 
 drawEnterpriseClickableSpriteToGrid
   :: Ref (List (Clickspot (Effect Unit)))
@@ -30,49 +31,119 @@ drawEnterpriseClickableSpriteToGrid
   -> Effect Unit
 drawEnterpriseClickableSpriteToGrid clickspots ctx = do
   clear ctx
-  x <- randomInt 0 39
-  y <- randomInt 0 24
+  col <- randomInt 0 39
+  row <- randomInt 0 24
   drawSpriteToGrid ctx
     (Sprite { offsetX: 20, offsetY: 20 })
-    (V { x, y })
+    (Cell { col, row })
   clickspots # modify_ \spots ->
    let
      spot = Clickspot
-       { x: x*32
-       , y: y*32
+       { x: col*32
+       , y: row*32
        , width: 32
        , height: 32
        , action: do
            clickspots # write mempty
-           -- recurse
            drawEnterpriseClickableSpriteToGrid clickspots ctx
        }
    in
      spot:spots
 
+
 main :: Effect Unit
-main = unsafePartial $ launchAff_ do
+main = withSpritesheet
+  { spritesheetPath: "sprites.png"
+  , onError: log "Couldn't load spritesheet!"
+  , onLoad: runMain
+  }
+
+
+runMain :: Spritesheet -> Effect Unit
+runMain spritesheet = unsafePartial do
   Just ctx <- initCanvas
     { canvasId: "game"
-    , spritesheetPath: "sprites.png"
+    , spritesheet
     }
-  liftEffect do
-    clear ctx
-    clickspots <- (new mempty) :: Effect (Ref (List (Clickspot (Effect Unit))))
-    moose <- getMouse
-    let mooseClicks = withPosition moose down
-    cancelMoose <- subscribe mooseClicks \stuff@{pos, value} -> do
-      log $ show stuff
-      clickspots' <- read clickspots
-      case pos of
-        Nothing -> pure unit
-        Just pos' -> do
-          let
-            clickspot = clickspots' # find \(Clickspot {x, y, width, height }) ->
-              pos'.x <= x + width && pos'.x >= x &&
-              pos'.y <= y + height && pos'.y >= y
-          case clickspot of
-            Nothing -> pure unit
-            Just cs -> (unwrap cs).action
-    drawEnterpriseClickableSpriteToGrid clickspots ctx
-    log "🍝"
+  clear ctx
+  clickspots <- (new mempty) :: Effect (Ref (List (Clickspot (Effect Unit))))
+  moose <- getMouse
+  let mooseClicks = withPosition moose down
+  cancelMoose <- subscribe mooseClicks \stuff@{pos, value} -> do
+    log $ show stuff
+    clickspots' <- read clickspots
+    case pos of
+      Nothing -> pure unit
+      Just pos' -> do
+        let
+          clickspot = clickspots' # find \(Clickspot {x, y, width, height }) ->
+            x <= pos'.x && pos'.x <= x + width &&
+            y <= pos'.y && pos'.y <= y + height
+        case clickspot of
+          Nothing -> pure unit
+          Just cs -> (unwrap cs).action
+  drawEnterpriseClickableSpriteToGrid clickspots ctx
+  log "🍝"
+
+
+-- type Scene a = { props :: List (Graphic a) }
+
+
+-- data Event' a = Action a
+
+
+-- data Graphic a
+-- instance functorGraphic :: Functor Graphic where map = undefined
+-- instance applyGraphic :: Apply Graphic where apply = undefined
+-- instance applicativeGraphic :: Applicative Graphic where pure = undefined
+-- instance bindGraphic :: Bind Graphic where bind = undefined
+-- instance monadGraphic :: Monad Graphic
+
+
+-- data Random a
+-- instance functorRandom :: Functor Random where map = undefined
+-- instance applyRandom :: Apply Random where apply = undefined
+-- instance applicativeRandom :: Applicative Random where pure = undefined
+-- instance bindRandom :: Bind Random where bind = undefined
+-- instance monadRandom :: Monad Random
+
+
+-- type Game state action =
+--   { init :: Random state
+--   , step :: Event' action -> state -> Random state
+--   , render :: state -> Scene action
+--   }
+
+
+-- runGame :: forall state action. Game state action -> Effect Unit
+-- runGame = undefined
+
+
+-- randomInt' :: Int -> Int -> Random Int
+-- randomInt' = undefined
+
+
+-- cow :: forall action.
+--   { x :: Int
+--   , y :: Int
+--   , onClick :: action
+--   } ->
+--   Graphic action
+-- cow = undefined
+
+
+-- cowClicker :: Game { x :: Int, y :: Int } Unit
+-- cowClicker =
+--   { init:
+--     pure { x: 5, y: 3 }
+
+--   , step:
+--     \(Action _) _ -> do
+--       x <- randomInt' 0 1279
+--       y <- randomInt' 0 719
+--       pure { x, y }
+
+--   , render:
+--     \{ x, y } ->
+--       { props: mkList [ cow { x, y, onClick: unit } ] }
+--   }
