@@ -475,3 +475,6 @@ maximum1 = Foldable1.maximum
 
 minimum1 :: forall f a. Ord a => Foldable1 f => f a -> a
 minimum1 = Foldable1.minimum
+
+flatMap :: forall f a b. Monad f => (a -> f b) -> f a -> f b
+flatMap = (=<<)
