@@ -4,6 +4,8 @@ module Imports
   , module Control.Alternative
   , module Control.Applicative
   , module Control.Monad
+  , module Control.Monad.Maybe.Trans
+  , module Control.Monad.Trans.Class
   , module Control.MonadPlus
   , module Data.Either
   , module Data.Foldable
@@ -11,6 +13,7 @@ module Imports
   , module Data.Functor
   , module Data.FunctorWithIndex
   , module Data.Generic.Rep
+  , module Data.Int
   , module Data.Lens
   , module Data.Lens.Iso.Newtype
   , module Data.Lens.Record
@@ -38,6 +41,7 @@ module Imports
   , module Data.Tuple
   , module Data.Unfoldable
   , module Effect
+  , module Effect.Console
   ) where
 
 import Prelude
@@ -47,9 +51,16 @@ import Prelude
 -- Language
 ----
 
+import Control.Monad.Trans.Class (lift)
 import Data.Generic.Rep (class Generic)
+import Data.Int (toNumber)
 import Data.Newtype (class Newtype, ala, alaF, un, unwrap, wrap)
 import Effect (Effect)
+import Effect.Console (log)
+
+import Data.Monoid
+  ( guard -- guardM
+  ) as Monoid
 
 
 ----
@@ -69,6 +80,8 @@ import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
 import Data.Ord.Down (Down(Down))
 import Data.Ord.Max (Max(Max))
 import Data.Ord.Min (Min(Min))
+
+import Control.Monad.Maybe.Trans (MaybeT(MaybeT), runMaybeT)
 
 
 ----
@@ -408,6 +421,9 @@ foreign import undefined :: forall a. a
 ----
 -- Aliased Functions
 ----
+
+guardM :: forall a. Monoid a => Boolean -> a -> a
+guardM = Monoid.guard
 
 mkArray :: forall f. Foldable f => f ~> Array
 mkArray = Array.fromFoldable
