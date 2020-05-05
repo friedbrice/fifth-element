@@ -35,18 +35,18 @@ repl: build ## Load project interactively in the Purescript REPL.
 watch: build ## Recompile on file changes.
 	npx pscid
 
+.PHONY: dev
+dev: build ## Host local dev server that updates when files are changed.
+	npx parcel index.html
+
 .PHONY: test
 test: build ## Run tests.
 	npx spago test
-
-.PHONY: run
-run: build ## Run app.
-	npx spago run
 
 .PHONY: docs
 docs: setup ## Generate documentation.
 	npx spago docs
 
-.PHONY: bundle
-bundle: clean test docs ## Package app for distribution.
-	# npx spago bundle-app
+# .PHONY: bundle
+# bundle: clean test docs ## Package app for distribution.
+# 	# npx spago bundle-app

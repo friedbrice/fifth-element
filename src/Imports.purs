@@ -8,11 +8,22 @@ module Imports
   , module Control.Monad.Trans.Class
   , module Control.MonadPlus
   , module Data.Either
+  , module Data.Enum
   , module Data.Foldable
   , module Data.FoldableWithIndex
   , module Data.Functor
   , module Data.FunctorWithIndex
   , module Data.Generic.Rep
+  , module Data.Generic.Rep.Bounded
+  , module Data.Generic.Rep.Enum
+  , module Data.Generic.Rep.Eq
+  , module Data.Generic.Rep.HeytingAlgebra
+  , module Data.Generic.Rep.Monoid
+  , module Data.Generic.Rep.Ord
+  , module Data.Generic.Rep.Ring
+  , module Data.Generic.Rep.Semigroup
+  , module Data.Generic.Rep.Semiring
+  , module Data.Generic.Rep.Show
   , module Data.Int
   , module Data.Lens
   , module Data.Lens.Iso.Newtype
@@ -39,6 +50,7 @@ module Imports
   , module Data.Traversable
   , module Data.TraversableWithIndex
   , module Data.Tuple
+  , module Data.Tuple.Nested
   , module Data.Unfoldable
   , module Effect
   , module Effect.Console
@@ -57,6 +69,73 @@ import Data.Int (toNumber)
 import Data.Newtype (class Newtype, ala, alaF, un, unwrap, wrap)
 import Effect (Effect)
 import Effect.Console (log)
+
+import Data.Generic.Rep.Bounded
+  ( class GenericBottom
+  , class GenericTop
+  , genericBottom
+  , genericTop
+  )
+
+import Data.Generic.Rep.Enum
+  ( class GenericBoundedEnum
+  , class GenericEnum
+  , genericCardinality
+  , genericFromEnum
+  , genericPred
+  , genericSucc
+  , genericToEnum
+  )
+
+import Data.Generic.Rep.Eq
+  ( class GenericEq
+  , genericEq
+  )
+
+import Data.Generic.Rep.HeytingAlgebra
+  ( class GenericHeytingAlgebra
+  , genericConj
+  , genericDisj
+  , genericFF
+  , genericImplies
+  , genericNot
+  , genericTT
+  )
+
+import Data.Generic.Rep.Monoid
+  ( class GenericMonoid
+  , genericMempty
+  )
+
+import Data.Generic.Rep.Ord
+  ( class GenericOrd
+  , genericCompare
+  )
+
+import Data.Generic.Rep.Ring
+  ( class GenericRing
+  , genericSub
+  )
+
+import Data.Generic.Rep.Semigroup
+  ( class GenericSemigroup
+  , genericAppend
+  )
+
+import Data.Generic.Rep.Semiring
+  ( class GenericSemiring
+  , genericAdd
+  , genericMul
+  , genericOne
+  , genericZero
+  )
+
+import Data.Generic.Rep.Show
+  ( class GenericShow
+  , class GenericShowArgs
+  , genericShow
+  , genericShowArgs
+  )
 
 import Data.Monoid
   ( guard -- guardM
@@ -123,7 +202,12 @@ import Data.List
   , nubBy
   , delete
   , deleteBy
+  , zipWith
+  , zipWithA
+  , zip
+  , unzip
   , (:)
+  , (!!)
   )
 
 import Data.List
@@ -198,6 +282,81 @@ import Data.Tuple
   , swap
   )
 
+import Data.Tuple.Nested
+  ( type (/\)
+  , T10
+  , T11
+  , T2
+  , T3
+  , T4
+  , T5
+  , T6
+  , T7
+  , T8
+  , T9
+  , Tuple1
+  , Tuple10
+  , Tuple2
+  , Tuple3
+  , Tuple4
+  , Tuple5
+  , Tuple6
+  , Tuple7
+  , Tuple8
+  , Tuple9
+  , curry1
+  , curry10
+  , curry2
+  , curry3
+  , curry4
+  , curry5
+  , curry6
+  , curry7
+  , curry8
+  , curry9
+  , get1
+  , get10
+  , get2
+  , get3
+  , get4
+  , get5
+  , get6
+  , get7
+  , get8
+  , get9
+  , over1
+  , over10
+  , over2
+  , over3
+  , over4
+  , over5
+  , over6
+  , over7
+  , over8
+  , over9
+  , tuple1
+  , tuple10
+  , tuple2
+  , tuple3
+  , tuple4
+  , tuple5
+  , tuple6
+  , tuple7
+  , tuple8
+  , tuple9
+  , uncurry1
+  , uncurry10
+  , uncurry2
+  , uncurry3
+  , uncurry4
+  , uncurry5
+  , uncurry6
+  , uncurry7
+  , uncurry8
+  , uncurry9
+  , (/\)
+  )
+
 import Data.String
   ( Pattern(Pattern)
   , Replacement(Replacement)
@@ -227,6 +386,34 @@ import Data.Lens
 
 import Data.Lens.Iso.Newtype (_Newtype)
 import Data.Lens.Record (prop)
+
+
+----
+-- Enumeration Classes
+----
+
+import Data.Enum
+  ( class BoundedEnum
+  , class Enum
+  , Cardinality(..)
+  , cardinality
+  , defaultCardinality
+  , defaultFromEnum
+  , defaultPred
+  , defaultSucc
+  , defaultToEnum
+  , downFrom
+  , downFromIncluding
+  , enumFromThenTo
+  , enumFromTo
+  , fromEnum
+  , pred
+  , succ
+  , toEnum
+  , toEnumWithDefaults
+  , upFrom
+  , upFromIncluding
+  )
 
 
 ----
@@ -414,6 +601,7 @@ import Data.TraversableWithIndex
   )
 
 import Data.String.CodeUnits (singleton, toCharArray) as Internal
+import Data.Enum (enumFromTo) as Internal
 
 foreign import undefined :: forall a. a
 
@@ -422,14 +610,14 @@ foreign import undefined :: forall a. a
 -- Aliased Functions
 ----
 
-guardM :: forall a. Monoid a => Boolean -> a -> a
-guardM = Monoid.guard
-
 mkArray :: forall f. Foldable f => f ~> Array
 mkArray = Array.fromFoldable
 
 rmArray :: forall f. Unfoldable f => Array ~> f
 rmArray = Array.toUnfoldable
+
+array :: Array ~> Array
+array = identity
 
 mkMap :: forall f k v. Ord k => Foldable f => f (Tuple k v) -> Map k v
 mkMap = Map.fromFoldable
@@ -455,6 +643,9 @@ mkList = List.fromFoldable
 rmList :: forall f. Unfoldable f => List ~> f
 rmList = List.toUnfoldable
 
+list :: List ~> List
+list = identity
+
 mkMaybe :: forall f. Foldable f => f ~> Maybe
 mkMaybe = map unwrap <<< foldMap (Just <<< First)
 
@@ -478,3 +669,8 @@ minimum1 = Foldable1.minimum
 
 flatMap :: forall f a b. Monad f => (a -> f b) -> f a -> f b
 flatMap = (=<<)
+
+guardM :: forall a. Monoid a => Boolean -> a -> a
+guardM = Monoid.guard
+
+infix 8 Internal.enumFromTo as ..

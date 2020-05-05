@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "canvas"
   , "console"
   , "effect"
+  , "enums"
   , "event"
   , "foldable-traversable"
   , "generics-rep"
