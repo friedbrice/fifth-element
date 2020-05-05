@@ -1,11 +1,11 @@
+*.swp
+.cache/
+.psc-ide-port
+.psci_modules/
 .spago/
+dist/
+generated-docs/
 node_modules/
 output/
 package-lock.json
-.psci_modules/
-generated-docs/
-.cache/
-*.swp
-dist/
-.psc-ide-port
 tags
