@@ -43,7 +43,7 @@ spriteClicker2k20 spritesheet =
     , width: 1*32
     , height: 1*32
     }
-    { x, y, onClick: Click p }
+    { x, y, onClick: Just $ Click p }
 
 
   step :: F.Event Click -> List Point -> F.Random (List Point)

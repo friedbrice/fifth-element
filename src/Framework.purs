@@ -2,7 +2,7 @@ module Framework
   ( Game, Scene, Event(..), runGame
   , Random, randomInt, randomBool, randomFloat, shuffle
   , Spritesheet, loadSpritesheet
-  , Sprite, sprite
+  , Sprite, Color(..), sprite, rectangle
   ) where
 
 import Imports
@@ -86,10 +86,13 @@ shuffle xs = pure $ mkList $ unsafeFisherYates $ mkArray xs
 newtype Spritesheet = Spritesheet GC.CanvasImageSource
 
 
-data Sprite a = Sprite Spritesheet Region Position a
+data Sprite a = Sprite (Maybe (Box /\ a)) (Canvas -> Effect Unit)
 
 
 derive instance functorSprite :: Functor Sprite
+
+
+newtype Color = Color String
 
 
 sprite :: forall a.
@@ -103,31 +106,59 @@ sprite :: forall a.
   } ->
   { x :: Int
   , y :: Int
-  , onClick :: a
-  -- , onClick2 :: a -- TODO: support left clicking
-  -- , onHover :: a -- TODO: support event on hover
-  -- , onAnimationEnd :: a -- TODO: support event on animation end
+  , onClick :: Maybe a
+  -- , onClick2 :: Maybe a -- TODO: support left clicking
+  -- , onHover :: Maybe a -- TODO: support event on hover
+  -- , onAnimationEnd :: Maybe a -- TODO: support event on animation end
   } ->
   Sprite a
-sprite spritesheet { xOffset, yOffset, width, height } { x, y, onClick } =
+sprite (Spritesheet spritesheet)
+       { xOffset, yOffset, width, height }
+       { x, y, onClick } =
   Sprite
-    spritesheet
-    (Region (Position xOffset yOffset) (Span width height))
-    (Position x y)
-    onClick
+    (onClick # map \action -> { x, y, dx: width, dy: height } /\ action)
+    \(Canvas { context }) ->
+      GC.drawImageFull
+        context
+        spritesheet
+        (toNumber xOffset)
+        (toNumber yOffset)
+        (toNumber width)
+        (toNumber height)
+        (toNumber x)
+        (toNumber y)
+        (toNumber width)
+        (toNumber height)
+
+
+rectangle :: forall a.
+  { border :: Maybe (Int /\ Color)
+  , fill :: Maybe Color
+  , x :: Int
+  , y :: Int
+  , width :: Int
+  , height :: Int
+  , onClick :: Maybe a
+  } ->
+  Sprite a
+rectangle { border, fill, x, y, width: dx, height: dy, onClick } =
+  Sprite
+    (onClick # map \action -> { x, y, dx, dy } /\ action)
+    \canvas -> do
+      fill # foldMap (fillBox canvas { x, y, dx, dy })
+      border # foldMap (uncurry $ borderBox canvas { x, y, dx, dy })
 
 
 loadSpritesheet :: String -> (Spritesheet -> Effect Unit) -> Effect Unit
 loadSpritesheet filename cont =
-  withSpritesheet
-    filename
-    (log $ "Failed to load spritesheet: " <> filename)
-    (cont <<< Spritesheet)
+  GC.tryLoadImage filename $ case _ of
+    Nothing -> (log $ "Failed to load spritesheet: " <> filename)
+    Just x -> cont $ Spritesheet x
 
 
 runGame :: forall state action. Game state action -> Effect Unit
 runGame { init, render, step, viewportSpec: { canvasId, width, height } } =
-  withCanvas canvasId (Span width height) (log "Failed to init canvas.") \cvs -> do
+  withCanvas canvasId { width, height } (log "Failed to init canvas.") \cnv -> do
     initState <- runRandom init
     let initScene = render initState
 
@@ -136,9 +167,8 @@ runGame { init, render, step, viewportSpec: { canvasId, width, height } } =
 
     let
       draw { sprites } = do
-        clear cvs
-        for_ sprites \(Sprite (Spritesheet sheet) src@(Region _ size) pos _) -> do
-          drawSprite sheet src (Region pos size) cvs
+        clear cnv
+        for_ sprites \(Sprite _ drawSprite) -> drawSprite cnv
 
       runStep event = do
         oldState <- Ref.read stateRef
@@ -151,8 +181,8 @@ runGame { init, render, step, viewportSpec: { canvasId, width, height } } =
     mouse <- FRP.withPosition <$> FRP.getMouse <*> pure FRP.down
     void $ FRP.subscribe mouse \{ pos } -> pos # foldMap \{ x, y } -> do
       { sprites } <- Ref.read sceneRef
-      sprites # foldMap
-        \(Sprite _ (Region _ (Span dx dy)) (Position x0 y0) action) ->
+      sprites # foldMap \(Sprite clickbox _) ->
+        clickbox # foldMap \({ x: x0, y: y0, dx, dy } /\ action) ->
           when (x0 <= x && x <= x0 + dx && y0 <= y && y <= y0 + dy) $
             runStep (Action action)
 
@@ -178,22 +208,13 @@ newtype Canvas = Canvas
   }
 
 
-data Position = Position Int Int
-data Span = Span Int Int
-data Region = Region Position Span
-
-type Cont a = (a -> Effect Unit) -> Effect Unit
+type Box = { x :: Int, y :: Int, dx :: Int, dy :: Int }
 
 
-withSpritesheet :: String -> Effect Unit -> Cont GC.CanvasImageSource
-withSpritesheet spritesheetPath onError onLoad =
-  GC.tryLoadImage spritesheetPath $ case _ of
-    Nothing -> onError
-    Just x -> onLoad x
-
-
-withCanvas :: String -> Span -> Effect Unit -> Cont Canvas
-withCanvas canvasId (Span width height) onError onLoad =
+withCanvas ::
+  String -> { width :: Int, height :: Int } -> Effect Unit ->
+  (Canvas -> Effect Unit) -> Effect Unit
+withCanvas canvasId { width, height } onError onLoad =
   maybe onError onLoad =<< runMaybeT do
     canvas <- MaybeT $ GC.getCanvasElementById canvasId
     lift $ GC.setCanvasDimensions canvas
@@ -206,33 +227,27 @@ withCanvas canvasId (Span width height) onError onLoad =
     pure $ Canvas { context, width, height }
 
 
-drawSprite :: GC.CanvasImageSource -> Region -> Region -> Canvas -> Effect Unit
-drawSprite spritesheet
-           (Region (Position x0 y0) (Span dx0 dy0))
-           (Region (Position x1 y1) (Span dx1 dy1))
-           (Canvas { context }) =
-  GC.drawImageFull
-    context
-    spritesheet
-    (toNumber x0)
-    (toNumber y0)
-    (toNumber dx0)
-    (toNumber dy0)
-    (toNumber x1)
-    (toNumber y1)
-    (toNumber dx1)
-    (toNumber dy1)
-
-
 clear :: Canvas -> Effect Unit
 clear canvas@(Canvas { width, height }) =
-  clearRegion (Region (Position 0 0) (Span width height)) canvas
+  fillBox canvas { x: 0, y: 0, dx: width, dy: height } (Color "black")
 
 
-clearRegion :: Region -> Canvas -> Effect Unit
-clearRegion (Region (Position x y) (Span dx dy)) (Canvas { context }) = do
-  GC.setFillStyle context "black"
+fillBox :: Canvas -> Box -> Color -> Effect Unit
+fillBox (Canvas { context }) { x, y, dx, dy } (Color color) = do
+  GC.setFillStyle context color
   GC.fillRect context
+    { x: toNumber x
+    , y: toNumber y
+    , width: toNumber dx
+    , height: toNumber dy
+    }
+
+
+borderBox :: Canvas -> Box -> Int -> Color -> Effect Unit
+borderBox (Canvas { context }) { x, y, dx, dy } width (Color color) = do
+  GC.setStrokeStyle context color
+  GC.setLineWidth context (toNumber width)
+  GC.strokeRect context
     { x: toNumber x
     , y: toNumber y
     , width: toNumber dx

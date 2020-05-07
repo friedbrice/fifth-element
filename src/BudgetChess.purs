@@ -61,8 +61,8 @@ budgetChess :: F.Spritesheet -> F.Game ChessState (Rank /\ File)
 budgetChess spritesheet =
   { viewportSpec:
     { canvasId: "game"
-    , width: 1280
-    , height: 800
+    , width: 48 * 8
+    , height: 48 * 8
     }
   , init: pure startingState
   , render
@@ -70,37 +70,96 @@ budgetChess spritesheet =
   }
   where
 
+  tiles :: List (F.Sprite (Rank /\ File))
+  tiles = do
+    r <- enum :: _ Rank
+    f <- enum :: _ File
+    let r' = fromEnum r
+    let f' = fromEnum f
+    pure $ F.rectangle
+      { fill: Just <<< F.Color $ if even (r' + f') then "beige" else "brown"
+      , border: Nothing
+      , x: f' * 48
+      , y: r' * 48
+      , width: 48
+      , height: 48
+      , onClick: Just (r /\ f)
+      }
+
+  spriteMap ::
+    Player -> Piece ->
+    { xOffset :: Int, yOffset :: Int, width :: Int, height :: Int }
+  spriteMap pl pc =
+    let
+      xOffset = case pc of
+        King -> 45 * 0
+        Queen -> 45 * 1
+        Bishop -> 45 * 2
+        Knight -> 45 * 3
+        Rook -> 45 * 4
+        Pawn -> 45 * 5
+
+      yOffset = case pl of
+        White -> 0
+        Black -> 45
+
+    in
+      { xOffset, yOffset, width: 45, height: 45 }
+
   startingState :: ChessState
   startingState =
-    { board: mkMap $ r1 <> r2 <> r7 <> r8
-    , turn: White
-    , selected: Nothing
-    }
-    where
-
-    front = replicate 8 Pawn
-    back = mkList [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
-    row r = zip (map (r /\ _) (FA .. FH))
-    r1 = row R1 $ map (White /\ _) back
-    r2 = row R2 $ map (White /\ _) front
-    r7 = row R7 $ map (Black /\ _) front
-    r8 = row R8 $ map (Black /\ _) back
+    let
+      front = replicate 8 Pawn
+      back = mkList [Rook, Knight, Bishop, King, Queen, Bishop, Knight, Rook]
+      row r = zip (map (r /\ _) (FA .. FH))
+      r1 = row R1 $ map (White /\ _) back
+      r2 = row R2 $ map (White /\ _) front
+      r7 = row R7 $ map (Black /\ _) front
+      r8 = row R8 $ map (Black /\ _) back
+    in
+      { board: mkMap $ r1 <> r2 <> r7 <> r8
+      , turn: White
+      , selected: Nothing
+      }
 
   render :: ChessState -> F.Scene (Rank /\ File)
-  render = undefined
+  render { board, selected } =
+    let
+      pieces = board # rmMap # map \(pos@(r /\ f) /\ (pl /\ pc)) ->
+        F.sprite spritesheet (spriteMap pl pc)
+          { x: fromEnum f * 48 + 1
+          , y: fromEnum r * 48 + 1
+          , onClick: Nothing
+          }
+
+      effects = selected # foldMap \(r /\ f) ->
+        pure $ F.rectangle
+          { fill: Nothing
+          , border: Just (3 /\ F.Color "yellow")
+          , x: fromEnum f * 48
+          , y: fromEnum r * 48
+          , width: 48
+          , height: 48
+          , onClick: Nothing
+          }
+    in
+      { sprites: tiles <> pieces <> effects }
 
   step :: F.Event (Rank /\ File) -> ChessState -> F.Random ChessState
   step event state@{ board, turn: pl, selected } =
     case selected, event of
 
-      Nothing, F.Action pos ->
-        case lookup pos board of
+      Nothing, F.Action sel ->
+        case lookup sel board of
 
           Just (pl' /\ _) | pl' == pl ->
-            pure state { selected = Just pos }
+            pure state { selected = Just sel }
 
           _ ->
             pure state
+
+      Just sel, F.Action mov | sel == mov ->
+        pure state { selected = Nothing }
 
       Just sel, F.Action mov ->
         case lookup sel board, lookup mov board of

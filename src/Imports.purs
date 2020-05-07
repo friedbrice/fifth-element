@@ -65,7 +65,7 @@ import Prelude
 
 import Control.Monad.Trans.Class (lift)
 import Data.Generic.Rep (class Generic)
-import Data.Int (toNumber)
+import Data.Int (even, toNumber)
 import Data.Newtype (class Newtype, ala, alaF, un, unwrap, wrap)
 import Effect (Effect)
 import Effect.Console (log)
@@ -282,80 +282,7 @@ import Data.Tuple
   , swap
   )
 
-import Data.Tuple.Nested
-  ( type (/\)
-  , T10
-  , T11
-  , T2
-  , T3
-  , T4
-  , T5
-  , T6
-  , T7
-  , T8
-  , T9
-  , Tuple1
-  , Tuple10
-  , Tuple2
-  , Tuple3
-  , Tuple4
-  , Tuple5
-  , Tuple6
-  , Tuple7
-  , Tuple8
-  , Tuple9
-  , curry1
-  , curry10
-  , curry2
-  , curry3
-  , curry4
-  , curry5
-  , curry6
-  , curry7
-  , curry8
-  , curry9
-  , get1
-  , get10
-  , get2
-  , get3
-  , get4
-  , get5
-  , get6
-  , get7
-  , get8
-  , get9
-  , over1
-  , over10
-  , over2
-  , over3
-  , over4
-  , over5
-  , over6
-  , over7
-  , over8
-  , over9
-  , tuple1
-  , tuple10
-  , tuple2
-  , tuple3
-  , tuple4
-  , tuple5
-  , tuple6
-  , tuple7
-  , tuple8
-  , tuple9
-  , uncurry1
-  , uncurry10
-  , uncurry2
-  , uncurry3
-  , uncurry4
-  , uncurry5
-  , uncurry6
-  , uncurry7
-  , uncurry8
-  , uncurry9
-  , (/\)
-  )
+import Data.Tuple.Nested (type (/\), (/\))
 
 import Data.String
   ( Pattern(Pattern)
@@ -605,6 +532,8 @@ import Data.Enum (enumFromTo) as Internal
 
 foreign import undefined :: forall a. a
 
+foreign import debug :: forall a. String -> a -> a
+
 
 ----
 -- Aliased Functions
@@ -625,14 +554,14 @@ mkMap = Map.fromFoldable
 rmMap :: forall f k v. Unfoldable f => Map k v -> f (Tuple k v)
 rmMap = Map.toUnfoldable
 
-mapSet :: forall a b. Ord b => (a -> b) -> Set a -> Set b
-mapSet = Set.map
-
 mkSet :: forall f a. Foldable f => Ord a => f a -> Set a
 mkSet = Set.fromFoldable
 
 rmSet :: forall f. Unfoldable f => Set ~> f
 rmSet = Set.toUnfoldable
+
+mapSet :: forall a b. Ord b => (a -> b) -> Set a -> Set b
+mapSet = Set.map
 
 remove :: forall a. Ord a => a -> Set a -> Set a
 remove = Set.delete
@@ -674,3 +603,6 @@ guardM :: forall a. Monoid a => Boolean -> a -> a
 guardM = Monoid.guard
 
 infix 8 Internal.enumFromTo as ..
+
+enum :: forall a. BoundedEnum a => List a
+enum = bottom .. top
