@@ -57,6 +57,9 @@ type ChessState =
   , selected :: Maybe (Rank /\ File)
   }
 
+-- TODO: heads-up HTML with player to move
+-- TODO: slide pieces into place
+
 budgetChess :: F.Spritesheet -> F.Game ChessState (Rank /\ File)
 budgetChess spritesheet =
   { viewportSpec:
