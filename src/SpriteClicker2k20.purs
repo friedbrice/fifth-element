@@ -53,3 +53,4 @@ spriteClicker2k20 spritesheet =
         # map (range 1)
         # flatMap (traverse $ const randomPoint)
     pure $ newPoints <> delete p points
+  step _ x = pure x

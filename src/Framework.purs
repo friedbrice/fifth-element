@@ -1,5 +1,5 @@
 module Framework
-  ( Game, Scene, Event(..), runGame
+  ( Game, Scene, Event(..), Key(..), runGame
   , Random, randomInt, randomBool, randomFloat, shuffle
   , Spritesheet, loadSpritesheet
   , Sprite, Color(..), sprite, rectangle
@@ -9,8 +9,9 @@ import Imports
 
 import Effect.Random as Eff
 import Effect.Ref as Ref
-import FRP.Event (subscribe) as FRP
-import FRP.Event.Mouse (down, getMouse, withPosition) as FRP
+import FRP.Event (subscribe) as Event
+import FRP.Event.Mouse (getMouse, up, withPosition) as Mouse
+import FRP.Event.Keyboard (getKeyboard, down, withKeys) as Keyboard
 import Graphics.Canvas as GC
 
 
@@ -40,10 +41,91 @@ type Scene action =
   }
 
 
+data Key
+  = Key_Escape
+  | Key_F1
+  | Key_F2
+  | Key_F3
+  | Key_F4
+  | Key_F5
+  | Key_F6
+  | Key_F7
+  | Key_F8
+  | Key_F9
+  | Key_F10
+  | Key_F11
+  | Key_F12
+  | Key_Insert
+  | Key_Delete
+  | Key_Home
+  | Key_End
+  | Key_PageUp
+  | Key_PageDown
+  | Key_UpArrow
+  | Key_LeftArrow
+  | Key_DownArrow
+  | Key_RightArrow
+  | Key_Tab
+  | Key_CapsLock
+  | Key_Shift
+  | Key_Control
+  | Key_Alt
+  | Key_Backspace
+  | Key_Enter
+  | Key_Space
+  | Key_Backtick
+  | Key_Hyphen
+  | Key_Equals
+  | Key_LeftBracket
+  | Key_RightBracket
+  | Key_Backslash
+  | Key_Semicolon
+  | Key_Apostrophe
+  | Key_Comma
+  | Key_Period
+  | Key_Slash
+  | Key_1
+  | Key_2
+  | Key_3
+  | Key_4
+  | Key_5
+  | Key_6
+  | Key_7
+  | Key_8
+  | Key_9
+  | Key_0
+  | Key_Q
+  | Key_W
+  | Key_E
+  | Key_R
+  | Key_T
+  | Key_Y
+  | Key_U
+  | Key_I
+  | Key_O
+  | Key_P
+  | Key_A
+  | Key_S
+  | Key_D
+  | Key_F
+  | Key_G
+  | Key_H
+  | Key_J
+  | Key_K
+  | Key_L
+  | Key_Z
+  | Key_X
+  | Key_C
+  | Key_V
+  | Key_B
+  | Key_N
+  | Key_M
+
+
 data Event action
   = Action action
-  -- TODO: clock ticks
-  -- TODO: key events
+  | KeyDown Key
+  | ClockTick Int
 
 
 derive instance functorEvent :: Functor Event
@@ -178,8 +260,139 @@ runGame { init, render, step, viewportSpec: { canvasId, width, height } } =
         Ref.write newScene sceneRef
         draw newScene
 
-    mouse <- FRP.withPosition <$> FRP.getMouse <*> pure FRP.down
-    void $ FRP.subscribe mouse \{ pos } -> pos # foldMap \{ x, y } -> do
+    keys <- Keyboard.withKeys <$> Keyboard.getKeyboard <*> pure Keyboard.down
+    void $ Event.subscribe keys \{ value } ->
+      case value of
+        "Escape" -> Just Key_Escape
+        "F1" -> Just Key_F1
+        "F2" -> Just Key_F2
+        "F3" -> Just Key_F3
+        "F4" -> Just Key_F4
+        "F5" -> Just Key_F5
+        "F6" -> Just Key_F6
+        "F7" -> Just Key_F7
+        "F8" -> Just Key_F8
+        "F9" -> Just Key_F9
+        "F10" -> Just Key_F10
+        "F11" -> Just Key_F11
+        "F12" -> Just Key_F12
+        "Insert" -> Just Key_Insert
+        "Delete" -> Just Key_Delete
+        "Home" -> Just Key_Home
+        "End" -> Just Key_End
+        "PageUp" -> Just Key_PageUp
+        "PageDown" -> Just Key_PageDown
+        "ArrowUp" -> Just Key_UpArrow
+        "ArrowLeft" -> Just Key_LeftArrow
+        "ArrowDown" -> Just Key_DownArrow
+        "ArrowRight" -> Just Key_RightArrow
+        "Tab" -> Just Key_Tab
+        "CapsLock" -> Just Key_CapsLock
+        "Shift" -> Just Key_Shift
+        "Control" -> Just Key_Control
+        "Alt" -> Just Key_Alt
+        "Backspace" -> Just Key_Backspace
+        "Enter" -> Just Key_Enter
+        " " -> Just Key_Space
+        "`" -> Just Key_Backtick
+        "~" -> Just Key_Backtick
+        "-" -> Just Key_Hyphen
+        "_" -> Just Key_Hyphen
+        " =" -> Just Key_Equals
+        "+" -> Just Key_Equals
+        "[" -> Just Key_LeftBracket
+        "{" -> Just Key_LeftBracket
+        "]" -> Just Key_RightBracket
+        "}" -> Just Key_RightBracket
+        "\\" -> Just Key_Backslash
+        "|" -> Just Key_Backslash
+        ";" -> Just Key_Semicolon
+        ":" -> Just Key_Semicolon
+        "'" -> Just Key_Apostrophe
+        "\"" -> Just Key_Apostrophe
+        "," -> Just Key_Comma
+        "<" -> Just Key_Comma
+        "." -> Just Key_Period
+        ">" -> Just Key_Period
+        "/" -> Just Key_Slash
+        "?" -> Just Key_Slash
+        "1" -> Just Key_1
+        "!" -> Just Key_1
+        "2" -> Just Key_2
+        "@" -> Just Key_2
+        "3" -> Just Key_3
+        "#" -> Just Key_3
+        "4" -> Just Key_4
+        "$" -> Just Key_4
+        "5" -> Just Key_5
+        "%" -> Just Key_5
+        "6" -> Just Key_6
+        "^" -> Just Key_6
+        "7" -> Just Key_7
+        "&" -> Just Key_7
+        "8" -> Just Key_8
+        "*" -> Just Key_8
+        "9" -> Just Key_9
+        "(" -> Just Key_9
+        "0" -> Just Key_0
+        ")" -> Just Key_0
+        "q" -> Just Key_Q
+        "Q" -> Just Key_Q
+        "w" -> Just Key_W
+        "W" -> Just Key_W
+        "e" -> Just Key_E
+        "E" -> Just Key_E
+        "r" -> Just Key_R
+        "R" -> Just Key_R
+        "t" -> Just Key_T
+        "T" -> Just Key_T
+        "y" -> Just Key_Y
+        "Y" -> Just Key_Y
+        "u" -> Just Key_U
+        "U" -> Just Key_U
+        "i" -> Just Key_I
+        "I" -> Just Key_I
+        "o" -> Just Key_O
+        "O" -> Just Key_O
+        "p" -> Just Key_P
+        "P" -> Just Key_P
+        "a" -> Just Key_A
+        "A" -> Just Key_A
+        "s" -> Just Key_S
+        "S" -> Just Key_S
+        "d" -> Just Key_D
+        "D" -> Just Key_D
+        "f" -> Just Key_F
+        "F" -> Just Key_F
+        "g" -> Just Key_G
+        "G" -> Just Key_G
+        "h" -> Just Key_H
+        "H" -> Just Key_H
+        "j" -> Just Key_J
+        "J" -> Just Key_J
+        "k" -> Just Key_K
+        "K" -> Just Key_K
+        "l" -> Just Key_L
+        "L" -> Just Key_L
+        "z" -> Just Key_Z
+        "Z" -> Just Key_Z
+        "x" -> Just Key_X
+        "X" -> Just Key_X
+        "c" -> Just Key_C
+        "C" -> Just Key_C
+        "v" -> Just Key_V
+        "V" -> Just Key_V
+        "b" -> Just Key_B
+        "B" -> Just Key_B
+        "n" -> Just Key_N
+        "N" -> Just Key_N
+        "m" -> Just Key_M
+        "M" -> Just Key_M
+        _ -> Nothing
+      # foldMap (runStep <<< KeyDown)
+
+    mouse <- Mouse.withPosition <$> Mouse.getMouse <*> pure Mouse.up
+    void $ Event.subscribe mouse \{ pos } -> pos # foldMap \{ x, y } -> do
       { sprites } <- Ref.read sceneRef
       sprites # foldMap \(Sprite clickbox _) ->
         clickbox # foldMap \({ x: x0, y: y0, dx, dy } /\ action) ->

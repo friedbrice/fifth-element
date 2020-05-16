@@ -181,3 +181,50 @@ budgetChess spritesheet =
 
           _, _ ->
             pure state
+
+      Just sel@(r /\ f), F.KeyDown F.Key_UpArrow ->
+        pure $ fromMaybe state do
+          r' <- pred r
+          _ /\ pc <- lookup sel board
+          Just state
+            { selected = Just (r' /\ f)
+            , board = board
+              # alter (const Nothing) sel
+              # alter (const $ Just $ pl /\ pc) (r' /\ f)
+            }
+
+      Just sel@(r /\ f), F.KeyDown F.Key_DownArrow ->
+        pure $ fromMaybe state do
+          r' <- succ r
+          _ /\ pc <- lookup sel board
+          Just state
+            { selected = Just (r' /\ f)
+            , board = board
+              # alter (const Nothing) sel
+              # alter (const $ Just $ pl /\ pc) (r' /\ f)
+            }
+
+      Just sel@(r /\ f), F.KeyDown F.Key_LeftArrow ->
+        pure $ fromMaybe state do
+          f' <- pred f
+          _ /\ pc <- lookup sel board
+          Just state
+            { selected = Just (r /\ f')
+            , board = board
+              # alter (const Nothing) sel
+              # alter (const $ Just $ pl /\ pc) (r /\ f')
+            }
+
+      Just sel@(r /\ f), F.KeyDown F.Key_RightArrow ->
+        pure $ fromMaybe state do
+          f' <- succ f
+          _ /\ pc <- lookup sel board
+          Just state
+            { selected = Just (r /\ f')
+            , board = board
+              # alter (const Nothing) sel
+              # alter (const $ Just $ pl /\ pc) (r /\ f')
+            }
+
+      _, _ ->
+        pure state

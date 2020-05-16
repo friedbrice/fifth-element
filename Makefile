@@ -41,11 +41,11 @@ watch: build ## Recompile on file changes.
 .PHONY: dist
 dist: build dist/chess.svg dist/sprites.png ## Package files for distribution
 
-dist/chess.svg:
+dist/chess.svg: assets/Chess_Pieces_Sprite.svg dist/chess.svg
 	mkdir -p dist
 	cp assets/Chess_Pieces_Sprite.svg dist/chess.svg
 
-dist/sprites.png:
+dist/sprites.png: assets/ProjectUtumno_full.png dist/sprites.png
 	mkdir -p dist
 	cp assets/ProjectUtumno_full.png dist/sprites.png
 
