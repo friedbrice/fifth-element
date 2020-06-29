@@ -2,7 +2,7 @@ module Framework
   ( Game, Scene, Event(..), Key(..), runGame
   , Random, randomInt, randomBool, randomFloat, shuffle
   , Spritesheet, loadSpritesheet
-  , Sprite, Color(..), sprite, rectangle
+  , Sprite, Color(..), Font(..), TextAlign(..), sprite, rectangle
   ) where
 
 import Imports
@@ -155,9 +155,6 @@ randomBool { trueProb } = do
   pure $ t <= trueProb
 
 
-foreign import unsafeFisherYates :: forall a. Array a -> Array a
-
-
 shuffle :: forall a. List a -> Random (List a)
 shuffle xs = pure $ mkList $ unsafeFisherYates $ mkArray xs
 
@@ -175,6 +172,9 @@ derive instance functorSprite :: Functor Sprite
 
 
 newtype Color = Color String
+newtype TextAlign = TextAlign String
+newtype Font = Font (Int /\ String)
+newtype TextSize = TextSize Int
 
 
 sprite :: forall a.
@@ -211,6 +211,47 @@ sprite (Spritesheet spritesheet)
         (toNumber y)
         (toNumber width)
         (toNumber height)
+
+
+-- TODO: This function is probably the wrong approach.
+--   I probably want to implement HTML overlay instead
+--   of inserting text elements into the Canvas.
+text :: forall a.
+  { textAlign :: Maybe TextAlign
+  , font :: Maybe Font
+  , fill :: Maybe Color
+  } ->
+  String ->
+  { x :: Int
+  , y :: Int
+  , onClick :: Maybe a
+  } ->
+  Sprite a
+text { textAlign, font, fill }
+     msg
+     { x, y, onClick } =
+  Sprite clickAction canvasAction
+
+  where
+
+  toGcTextAlign (TextAlign align) = undefined align
+
+  toGcFont (Font (size /\ face)) = undefined size face
+
+  { dx, dy } = undefined GC.measureText
+
+  clickAction =
+    onClick # map \action -> { x, y, dx, dy } /\ action
+
+  canvasAction =
+    \(Canvas { context }) -> do
+      withLocal (GC.textAlign context)
+                (GC.setTextAlign context)
+                (map toGcTextAlign textAlign) $ do
+        withLocal (GC.font context)
+                  (GC.setFont context)
+                  (map toGcFont font) $ do
+          GC.fillText context msg (toNumber x) (toNumber y)
 
 
 rectangle :: forall a.
@@ -411,9 +452,6 @@ runRandom :: Random ~> Effect
 runRandom (Random eff) = eff
 
 
-foreign import setImageSmoothing :: GC.Context2D -> Boolean -> Effect Unit
-
-
 newtype Canvas = Canvas
   { context :: GC.Context2D
   , width :: Int
@@ -466,3 +504,20 @@ borderBox (Canvas { context }) { x, y, dx, dy } width (Color color) = do
     , width: toNumber dx
     , height: toNumber dy
     }
+
+
+withLocal :: forall m a b. Monad m =>
+  m a -> (a -> m Unit) -> Maybe a -> m b -> m b
+withLocal _ _ Nothing f = f
+withLocal save set (Just x) f = do
+  x0 <- save
+  set x
+  y <- f
+  set x0
+  pure y
+
+
+foreign import setImageSmoothing :: GC.Context2D -> Boolean -> Effect Unit
+
+
+foreign import unsafeFisherYates :: forall a. Array a -> Array a

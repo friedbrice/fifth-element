@@ -274,8 +274,7 @@ import Data.Either
   )
 
 import Data.Tuple
-  ( Tuple(Tuple)
-  , fst
+  ( fst
   , snd
   , curry
   , uncurry
@@ -548,10 +547,10 @@ rmArray = Array.toUnfoldable
 array :: Array ~> Array
 array = identity
 
-mkMap :: forall f k v. Ord k => Foldable f => f (Tuple k v) -> Map k v
+mkMap :: forall f k v. Ord k => Foldable f => f (k /\ v) -> Map k v
 mkMap = Map.fromFoldable
 
-rmMap :: forall f k v. Unfoldable f => Map k v -> f (Tuple k v)
+rmMap :: forall f k v. Unfoldable f => Map k v -> f (k /\ v)
 rmMap = Map.toUnfoldable
 
 mkSet :: forall f a. Foldable f => Ord a => f a -> Set a
